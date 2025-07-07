@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cargo_nomade/widgets/bottom_nav.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   // Définition des couleurs pour une maintenance facile
-  static const Color primaryTextColor = Color(0xFF0D5159);
-  static const Color secondaryTextColor = Colors.black54;
-  static const Color inactiveIconColor = Colors.grey;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +65,7 @@ class HomeScreen extends StatelessWidget {
             ),
 
             // Barre de navigation inférieure
-            _buildBottomNavBar(),
+            buildBottomNavBar(context),
           ],
         ),
       ),
@@ -182,41 +180,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Construit la barre de navigation en bas de l'écran
-  Widget _buildBottomNavBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(icon: Icons.home, label: 'Home', isActive: true),
-          _buildNavItem(icon: Icons.chat_bubble_outline, label: 'Messages'),
-          _buildNavItem(icon: Icons.person_outline, label: 'Profile'),
-        ],
-      ),
-    );
-  }
-
-  /// Construit un élément de la barre de navigation
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    bool isActive = false,
-  }) {
-    final color = isActive ? primaryTextColor : inactiveIconColor;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 28),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
 }
+
+/// Construit un élément de la barre de navigation

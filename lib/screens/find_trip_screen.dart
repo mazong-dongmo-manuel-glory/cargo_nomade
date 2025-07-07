@@ -1,3 +1,4 @@
+import 'package:cargo_nomade/widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -76,12 +77,6 @@ class _FindTripScreenState extends State<FindTripScreen> {
     return Scaffold(
       backgroundColor: _backgroundColor, // Use the new background color
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            context.go('/home');
-          },
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-        ),
         backgroundColor: Colors.white, // AppBar background white
         elevation: 0, // No shadow for a cleaner look
         toolbarHeight: 80, // Slightly taller app bar for better spacing
@@ -178,6 +173,7 @@ class _FindTripScreenState extends State<FindTripScreen> {
                     ))
             : _buildInitialState(), // Show initial state when no search is performed
       ),
+      bottomNavigationBar: buildBottomNavBar(context),
     );
   }
 

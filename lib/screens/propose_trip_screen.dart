@@ -1,3 +1,4 @@
+import 'package:cargo_nomade/widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +28,7 @@ class _ProposeTripScreenState extends State<ProposeTripScreen> {
   final _dateController = TextEditingController();
   final _weightController = TextEditingController();
   final _priceController = TextEditingController();
+  final Color _primaryColor = const Color(0xFF0D5159);
 
   // Variables d'état pour les autres champs
   DateTime? _selectedDate;
@@ -57,6 +59,9 @@ class _ProposeTripScreenState extends State<ProposeTripScreen> {
               primary: Color(0xFF0D5159), // Couleur principale du picker
               onPrimary: Colors.white,
               onSurface: Colors.black, // Couleur du texte dans le calendrier
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: Colors.black),
             ),
           ),
           child: child!,
@@ -145,15 +150,17 @@ class _ProposeTripScreenState extends State<ProposeTripScreen> {
       backgroundColor: Colors.white,
 
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            context.go("/home");
-          },
-          icon: Icon(Icons.arrow_back),
-        ),
+        backgroundColor: Colors.white, // AppBar background white
+        elevation: 0,
+        shadowColor: Colors.transparent, // No shadow for a cleaner look
+        toolbarHeight: 80, // Slightly taller app bar for better spacing
         title: Text(
-          'Proposer un trajet',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          'Trouver un transporteur',
+          style: GoogleFonts.poppins(
+            color: _primaryColor,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -178,7 +185,7 @@ class _ProposeTripScreenState extends State<ProposeTripScreen> {
                   },
                   child: SvgPicture.asset(
                     'assets/vectors/propose_trip.svg',
-                    height: 150,
+                    height: 250,
                   ),
                 ),
               ),
@@ -262,6 +269,7 @@ class _ProposeTripScreenState extends State<ProposeTripScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: buildBottomNavBar(context),
     );
   }
 

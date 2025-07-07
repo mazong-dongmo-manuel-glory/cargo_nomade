@@ -272,6 +272,7 @@ class _EnterUserInfoFormState extends State<EnterUserInfoForm> {
         selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
         trailingSpace: false,
       ),
+      searchBoxDecoration: InputDecoration(hintText: "Entrer un pays"),
       inputDecoration: const InputDecoration(
         border: OutlineInputBorder(),
         hintText: "Numéro de téléphone",
