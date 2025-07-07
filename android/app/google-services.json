@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "317105142674",
+    "project_id": "cargo-nomade-ece3b",
+    "storage_bucket": "cargo-nomade-ece3b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317105142674:android:53cb4916ae5e7b34949f4b",
+        "android_client_info": {
+          "package_name": "com.example.cargo_nomade"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDot1DII3TJy_16B9a8whJMa8rMZg4j1LM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
