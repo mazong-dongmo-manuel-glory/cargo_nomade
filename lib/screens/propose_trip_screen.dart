@@ -146,24 +146,7 @@ class _ProposeTripScreenState extends State<ProposeTripScreen> {
   Widget build(BuildContext context) {
     final tripProvider = context.watch<TripProvider>();
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-
-      appBar: AppBar(
-        backgroundColor: Colors.white, // AppBar background white
-        elevation: 0,
-        shadowColor: Colors.transparent, // No shadow for a cleaner look
-        toolbarHeight: 80, // Slightly taller app bar for better spacing
-        title: Text(
-          'Trouver un transporteur',
-          style: GoogleFonts.poppins(
-            color: _primaryColor,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
+    return SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
@@ -268,8 +251,7 @@ class _ProposeTripScreenState extends State<ProposeTripScreen> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: buildBottomNavBar(context),
+
     );
   }
 

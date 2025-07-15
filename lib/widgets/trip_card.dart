@@ -1,76 +1,96 @@
-// FILE: lib/widgets/trip_card.dart
+// lib/widgets/trip_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'package:go_router/go_router.dart'; // Keep if you use it for navigation
+import 'package:intl/intl.dart'; // Ajoutez intl: ^0.18.1 (ou plus récent) à votre pubspec.yaml
 import '../models/trip_model.dart';
-import '../models/enums.dart'; // Pour TransportMode
+import '../models/enums.dart'; // Assurez-vous que le chemin est correct
 
 class TripCard extends StatelessWidget {
   final TripModel trip;
+  final VoidCallback? onTap;
 
-  TripCard({super.key, required this.trip});
+  const TripCard({super.key, required this.trip, this.onTap});
 
-  // Define your theme colors for consistency
-  final Color _primaryColor = const Color(
-    0xFF0D5159,
-  ); // Dark Teal from your app theme
-  final Color _darkTextColor =
-      Colors.black87; // General dark text color for values
-  final Color _lightTextColor =
-      Colors.grey[600]!; // Lighter text color for labels
+  // Helper pour obtenir une icône basée sur le mode de transport
+  IconData _getTransportIcon(TransportMode mode) {
+
+    switch (mode) {
+      case TransportMode.plane:
+        return Icons.airplanemode_active;
+      default:
+        return Icons.public;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Formatter for the date including the year for clarity
-    final formattedDate = DateFormat(
-      'dd MMM yyyy', // Added year
-      'fr_FR', // Ensure French locale for month abbreviation
-    ).format(trip.departureDate);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Card(
-      elevation: 6, // Slightly increased elevation for a more prominent card
-      shadowColor: _primaryColor.withOpacity(
-        0.1,
-      ), // Shadow with primary color tint
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ), // Slightly more rounded corners
-      margin: const EdgeInsets.symmetric(
-        horizontal: 0,
-        vertical: 8,
-      ), // Provide external margin if placed in a list
+      // La Card utilise automatiquement le CardTheme de votre thème principal
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      clipBehavior: Clip.antiAlias, // Assure que l'InkWell respecte les coins arrondis
       child: InkWell(
-        onTap: () {
-          // Naviguer vers les détails du trajet (à implémenter)
-          // context.go('/trip-details/${trip.id}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Afficher les détails du trajet...')),
-          );
-        },
-        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        splashColor: colorScheme.secondary.withOpacity(0.2),
         child: Padding(
-          padding: const EdgeInsets.all(
-            20.0,
-          ), // Increased padding for more breathing room
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
-              const SizedBox(height: 20), // More spacing
-              _buildRouteInfo(),
-              const Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: 20.0,
-                ), // Spacing around divider
-                child: Divider(
-                  height: 1,
-                  thickness: 0.8,
-                  color: Colors.black12,
-                ), // Lighter, thinner divider
+              // Ligne 1: Informations sur le voyageur
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey.shade300,
+                    backgroundImage: trip.travelerPhotoUrl != null
+                        ? NetworkImage(trip.travelerPhotoUrl!)
+                        : null,
+                    child: trip.travelerPhotoUrl == null
+                        ? Icon(Icons.person, color: colorScheme.primary)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(trip.travelerName, style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+                  const Spacer(),
+                  Icon(_getTransportIcon(trip.transportMode), color: colorScheme.primary, size: 24),
+                ],
               ),
-              _buildFooter(context, formattedDate),
+              const SizedBox(height: 16),
+              const Divider(),
+
+              // Ligne 2: Itinéraire
+              Row(
+                children: [
+                  _buildLocationEndpoint(Icons.flight_takeoff, trip.departureLocation, textTheme, colorScheme),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Icon(Icons.arrow_forward, color: Colors.grey, size: 20),
+                  ),
+                  _buildLocationEndpoint(Icons.flight_land, trip.arrivalLocation, textTheme, colorScheme),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Ligne 3: Détails
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildDetailItem(Icons.calendar_today, "Départ", DateFormat('d MMM yyyy', 'fr_FR').format(trip.departureDate), textTheme, colorScheme),
+                    _buildDetailItem(Icons.workspaces, "Dispo.", "${trip.availableWeightKg} kg", textTheme, colorScheme),
+                    _buildDetailItem(Icons.sell, "Prix", "${trip.pricePerKg}€/kg", textTheme, colorScheme),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -78,179 +98,33 @@ class TripCard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 28, // Slightly larger avatar
-          backgroundColor: _primaryColor.withOpacity(
-            0.1,
-          ), // Lighter background for the initial
-          backgroundImage: trip.travelerPhotoUrl != null
-              ? NetworkImage(trip.travelerPhotoUrl!)
-              : null,
-          child: trip.travelerPhotoUrl == null
-              ? Text(
-                  trip.travelerName.isNotEmpty
-                      ? trip.travelerName[0].toUpperCase()
-                      : 'U', // Ensure uppercase initial
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    color: _primaryColor, // Use primary color for initial
-                    fontSize: 20, // Larger initial
-                  ),
-                )
-              : null,
-        ),
-        const SizedBox(width: 15), // More spacing
-        Expanded(
-          child: Text(
-            trip.travelerName,
-            style: GoogleFonts.poppins(
-              fontSize: 18, // Slightly larger font for name
-              fontWeight: FontWeight.w700, // Bolder
-              color: _darkTextColor, // Black for the name
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        // Optional: Add a verified icon or rating here
-        // Icon(Icons.verified_user, color: Colors.blueAccent, size: 20),
-      ],
-    );
-  }
-
-  Widget _buildRouteInfo() {
-    return Row(
-      children: [
-        _buildLocationColumn(
-          'Départ',
-          trip.departureLocation,
-          Icons.flight_takeoff, // Good icon choice
-        ),
-        const Spacer(), // Flexible space
-        Column(
-          children: [
-            Icon(
-              trip.transportMode == TransportMode.plane
-                  ? Icons.airplanemode_active
-                  : Icons.local_shipping, // Good icon choice
-              color: _primaryColor, // Primary color for the main icon
-              size: 32, // Slightly larger icon
-            ),
-            const SizedBox(height: 6), // More spacing
-            Text(
-              '${trip.availableWeightKg.toStringAsFixed(0)} kg',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w700, // Bolder weight
-                color: _primaryColor, // Primary color for weight
-                fontSize: 16, // Slightly larger font for weight
-              ),
-            ),
-          ],
-        ),
-        const Spacer(), // Flexible space
-        _buildLocationColumn(
-          'Arrivée',
-          trip.arrivalLocation,
-          Icons.flight_land, // Good icon choice
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLocationColumn(String title, String location, IconData icon) {
+  // Widget pour un point de départ ou d'arrivée
+  Widget _buildLocationEndpoint(IconData icon, String location, TextTheme textTheme, ColorScheme colorScheme) {
     return Expanded(
-      flex: 5,
-      child: Column(
-        crossAxisAlignment: title == 'Départ'
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.end,
+      child: Row(
         children: [
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: _lightTextColor,
-              fontSize: 13,
-            ), // Use light text color for labels
-          ),
-          const SizedBox(height: 6), // More spacing
-          Text(
-            location,
-            style: GoogleFonts.poppins(
-              fontSize: 17, // Slightly larger font for locations
-              fontWeight: FontWeight.w600, // Good weight
-              color: _darkTextColor, // Black for location names
+          Icon(icon, color: colorScheme.primary, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              location,
+              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: title == 'Départ' ? TextAlign.start : TextAlign.end,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 2, // Allow up to 2 lines for long location names
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFooter(BuildContext context, String formattedDate) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // Widget pour un détail (date, poids, prix)
+  Widget _buildDetailItem(IconData icon, String label, String value, TextTheme textTheme, ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Date de départ',
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: _lightTextColor,
-              ), // Use light text color
-            ),
-            const SizedBox(height: 4),
-            Text(
-              formattedDate,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w700, // Bolder date
-                color: _darkTextColor, // Black for the date
-                fontSize: 15,
-              ),
-            ),
-          ],
-        ),
-        ElevatedButton.icon(
-          onPressed: () {
-            // Logique pour initier une discussion ou une demande
-            // Idéalement, on passe l'ID du trajet et l'ID du voyageur
-            // context.go('/chat/${trip.travelerId}?tripId=${trip.id}');
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Fonctionnalité de chat à venir !')),
-            );
-          },
-          icon: const Icon(
-            Icons.chat_bubble_outline,
-            size: 18,
-          ), // Changed icon to chat for more direct meaning
-          label: Text(
-            'Discuter',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ), // Text style for button
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _primaryColor, // Primary color for the button
-            foregroundColor: Colors.white, // White text/icon on button
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                30,
-              ), // More rounded "pill" shape
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 12,
-            ), // More padding
-            elevation: 4, // Add slight elevation to button
-          ),
-        ),
+        Text(label, style: textTheme.bodySmall?.copyWith(color: colorScheme.primary)),
+        const SizedBox(height: 4),
+        Text(value, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
       ],
     );
   }

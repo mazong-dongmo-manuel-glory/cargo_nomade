@@ -6,16 +6,12 @@ import 'package:cargo_nomade/widgets/bottom_nav.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // Définition des couleurs pour une maintenance facile
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return SafeArea(
         child: Column(
           children: [
-            // Contenu principal qui peut défiler sur de petits écrans
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -23,21 +19,18 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    // Message de bienvenue
                     Text(
                       'Bienvenue',
                       style: GoogleFonts.poppins(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: primaryTextColor,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                     const SizedBox(height: 24),
 
-                    // Illustration
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16.0),
-                      // Assurez-vous que le chemin de l'image est correct
                       child: Image.asset(
                         'assets/images/travel_illustration.png',
                         width: double.infinity,
@@ -48,6 +41,7 @@ class HomeScreen extends StatelessWidget {
 
                     // Bouton "Mes colis"
                     _buildFullWidthButton(
+                      context: context,
                       icon: Icons.inventory_2_outlined,
                       text: 'Mes colis',
                       onTap: () {
@@ -64,11 +58,9 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            // Barre de navigation inférieure
-            buildBottomNavBar(context),
           ],
         ),
-      ),
+
     );
   }
 
@@ -77,6 +69,7 @@ class HomeScreen extends StatelessWidget {
     required IconData icon,
     required String text,
     required VoidCallback onTap,
+    required BuildContext context
   }) {
     return Material(
       color: Colors.white,
@@ -91,7 +84,7 @@ class HomeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 18.0),
           child: Row(
             children: [
-              Icon(icon, color: primaryTextColor, size: 24),
+              Icon(icon, color: Theme.of(context).primaryColor, size: 24),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
@@ -99,7 +92,7 @@ class HomeScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: primaryTextColor,
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
               ),
@@ -119,6 +112,7 @@ class HomeScreen extends StatelessWidget {
           child: _buildActionButton(
             // NOTE: L'icône dans l'image est personnalisée.
             // Icons.route_outlined est une bonne alternative.
+            context: context,
             icon: Icons.route_outlined,
             text: 'Proposer un trajet',
             onTap: () {
@@ -129,6 +123,7 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(
           child: _buildActionButton(
+            context: context,
             // NOTE: Icons.person_search est une très bonne alternative pour l'icône de l'image.
             icon: Icons.person_search_outlined,
             text: 'Trouver un transporteur',
@@ -146,6 +141,7 @@ class HomeScreen extends StatelessWidget {
     required IconData icon,
     required String text,
     required VoidCallback onTap,
+    required BuildContext context
   }) {
     return Material(
       color: Colors.white,
@@ -161,7 +157,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: primaryTextColor, size: 36),
+              Icon(icon, color: Theme.of(context).primaryColor, size: 36),
               const SizedBox(height: 12),
               Text(
                 text,
@@ -169,7 +165,7 @@ class HomeScreen extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: primaryTextColor,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
             ],
@@ -179,7 +175,4 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// Construit la barre de navigation en bas de l'écran
 }
-
-/// Construit un élément de la barre de navigation

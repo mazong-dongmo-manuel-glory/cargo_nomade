@@ -4,11 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
-  primaryColor: const Color(0xFF20B2AA), // Turquoise
+  primaryColor: Color(0xFF0D5159), // Turquoise
   scaffoldBackgroundColor: Colors.transparent,
   colorScheme: const ColorScheme.dark(
-    primary: Color(0xFF20B2AA), // Turquoise
-    secondary: Color(0xFF00C853), // Vert vif
+    primary: Color(0xFF0D5159), // Turquoise
+    secondary: Color(0xFF0D5159), // Vert vif
     background: Colors.transparent,
     surface: Colors.white,
     onPrimary: Colors.white,

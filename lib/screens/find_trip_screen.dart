@@ -1,15 +1,11 @@
-import 'package:cargo_nomade/widgets/bottom_nav.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart'; // Keep if you use it in TripCard or elsewhere
-import 'package:go_router/go_router.dart'; // Keep if you use it for navigation
+// lib/screens/find_trip_screen.dart
 
-import '../models/trip_model.dart';
-import '../models/enums.dart'; // Keep if you use it
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../providers/trip_provider.dart';
-import '../widgets/trip_card.dart'; // Make sure TripCard is styled appropriately
+import '../widgets/trip_card.dart';
+import '../models/trip_model.dart'; // Importez le modèle pour le typage
 
 class FindTripScreen extends StatefulWidget {
   const FindTripScreen({super.key});
@@ -19,220 +15,297 @@ class FindTripScreen extends StatefulWidget {
 }
 
 class _FindTripScreenState extends State<FindTripScreen> {
-  final _searchController = TextEditingController();
-  bool _showResults =
-      false; // Renamed from _showFilters to be more semantically correct
-  List<TripModel> _filteredTrips = [];
-
-  // Define your theme colors for consistency
-  final Color _primaryColor = const Color(
-    0xFF0D5159,
-  ); // Dark Teal from your images
-  final Color _backgroundColor = const Color(
-    0xFFF0F5F5,
-  ); // Light beige/off-white from second image
+  // Contrôleurs et état pour les filtres
+  final _departureController = TextEditingController();
+  final _arrivalController = TextEditingController();
+  DateTime? _selectedDate;
+  bool _isFilterPanelVisible = false; // Contrôle la visibilité du panneau
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Fetch all trips initially to populate if search is empty
-      final tripProvider = Provider.of<TripProvider>(context, listen: false);
-      tripProvider.fetchAllTrips().then((_) {
-        if (mounted) {
-          setState(() {
-            _filteredTrips = tripProvider.trips; // Initialize with all trips
-          });
-        }
-      });
+      Provider.of<TripProvider>(context, listen: false).fetchAllTrips();
     });
+
+    _departureController.addListener(() => setState(() {}));
+    _arrivalController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _departureController.dispose();
+    _arrivalController.dispose();
     super.dispose();
   }
 
-  void _filterTrips(String query) {
-    final allTrips = Provider.of<TripProvider>(context, listen: false).trips;
-    final filtered = allTrips
-        .where(
-          (trip) =>
-              trip.departureLocation.toLowerCase().contains(
-                query.toLowerCase(),
-              ) ||
-              trip.arrivalLocation.toLowerCase().contains(query.toLowerCase()),
-        )
-        .toList();
-
-    setState(() {
-      _filteredTrips = filtered;
-      _showResults = true; // Show results as soon as filtering happens
-    });
+  // Logique de filtrage
+  List<TripModel> _getFilteredTrips(List<TripModel> allTrips) {
+    if (_departureController.text.isEmpty &&
+        _arrivalController.text.isEmpty &&
+        _selectedDate == null) {
+      return allTrips;
+    }
+    return allTrips.where((trip) {
+      final departureMatch = _departureController.text.isEmpty ||
+          trip.departureLocation
+              .toLowerCase()
+              .contains(_departureController.text.toLowerCase());
+      final arrivalMatch = _arrivalController.text.isEmpty ||
+          trip.arrivalLocation
+              .toLowerCase()
+              .contains(_arrivalController.text.toLowerCase());
+      final dateMatch = _selectedDate == null ||
+          DateUtils.isSameDay(trip.departureDate, _selectedDate);
+      return departureMatch && arrivalMatch && dateMatch;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _backgroundColor, // Use the new background color
-      appBar: AppBar(
-        backgroundColor: Colors.white, // AppBar background white
-        elevation: 0, // No shadow for a cleaner look
-        toolbarHeight: 80, // Slightly taller app bar for better spacing
-        title: Text(
-          'Trouver un transporteur',
-          style: GoogleFonts.poppins(
-            color: _primaryColor,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+    final theme = Theme.of(context);
+
+    // Le corps principal est maintenant un Container avec un Column
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withOpacity(0.1),
+            theme.colorScheme.background,
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
-        centerTitle: false, // Align title to the left
-        // If you need a back button, it's automatically added by GoRouter or you can add IconButton
-        // leading: IconButton(
-        //   icon: Icon(Icons.arrow_back_ios, color: _primaryColor),
-        //   onPressed: () => context.pop(),
-        // ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(
-            60.0,
-          ), // Height for the search bar
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 8.0,
+      ),
+      // SafeArea pour éviter les superpositions avec la barre de statut
+      child: SafeArea(
+        child: Column(
+          children: [
+            // --- NOUVEAU : En-tête personnalisé remplaçant l'AppBar ---
+            _buildHeader(context),
+
+            // Panneau de filtre animé (inchangé)
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return SizeTransition(sizeFactor: animation, child: child);
+              },
+              child: _isFilterPanelVisible ? _buildFilterPanel() : const SizedBox.shrink(),
             ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (query) {
-                _filterTrips(query);
-                if (query.isEmpty) {
-                  setState(() {
-                    _showResults = false; // Hide results if search bar is empty
-                  });
-                }
-              },
-              onTap: () {
-                // Show results even if search is empty, but clicked
-                setState(() => _showResults = true);
-              },
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey[100], // A very light grey for the fill
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: _primaryColor.withOpacity(0.7),
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: Colors.grey[500]),
-                        onPressed: () {
-                          _searchController.clear();
-                          _filterTrips(''); // Clear filter
-                          setState(() {
-                            _showResults = false; // Go back to initial state
-                          });
-                        },
-                      )
-                    : null,
-                hintText: 'Rechercher un lieu...',
-                hintStyle: GoogleFonts.poppins(color: Colors.grey[500]),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none, // No border line
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 14.0,
-                  horizontal: 16.0,
-                ),
+
+            // Le Consumer avec la liste des trajets prend l'espace restant
+            Expanded(
+              child: Consumer<TripProvider>(
+                builder: (context, tripProvider, child) {
+                  if (tripProvider.isLoading && tripProvider.trips.isEmpty) {
+                    return Center(child: CircularProgressIndicator(color: theme.colorScheme.secondary));
+                  }
+                  if (tripProvider.error != null) {
+                    return _buildErrorState(tripProvider);
+                  }
+
+                  final filteredTrips = _getFilteredTrips(tripProvider.trips);
+
+                  if (filteredTrips.isEmpty && tripProvider.trips.isNotEmpty) {
+                    return _buildNoResultsState();
+                  }
+                  if (tripProvider.trips.isEmpty) {
+                    return _buildEmptyState();
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: () => tripProvider.fetchAllTrips(),
+                    backgroundColor: theme.colorScheme.primary,
+                    color: theme.colorScheme.onPrimary,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+                      itemCount: filteredTrips.length,
+                      itemBuilder: (context, index) {
+                        final trip = filteredTrips[index];
+                        return TripCard(
+                          trip: trip,
+                          onTap: () => print("Tapped on trip ${trip.id}"),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ),
-          ),
+          ],
         ),
       ),
-      body: SafeArea(
-        child: _showResults
-            ? (_filteredTrips.isEmpty
-                  ? _buildEmptyState()
-                  : Padding(
-                      padding: const EdgeInsets.only(
-                        top: 16.0,
-                        left: 20.0,
-                        right: 20.0,
-                      ),
-                      child: ListView.builder(
-                        itemCount: _filteredTrips.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: TripCard(trip: _filteredTrips[index]),
-                          );
-                        },
-                      ),
-                    ))
-            : _buildInitialState(), // Show initial state when no search is performed
-      ),
-      bottomNavigationBar: buildBottomNavBar(context),
     );
   }
 
-  Widget _buildInitialState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          'assets/vectors/find_trip.svg',
-          height: 250, // Slightly larger SVG
-          width: 250,
-        ),
-        const SizedBox(height: 30),
-        Text(
-          'Prêt à envoyer un colis ?',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: _primaryColor.withOpacity(0.9),
+  // --- NOUVEAU : Widget pour l'en-tête personnalisé ---
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Trajets Disponibles',
+            // Utilise un style de texte du thème pour la cohérence
+            style: theme.textTheme.displaySmall?.copyWith(fontSize: 24),
           ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0),
-          child: Text(
-            'Recherchez un transporteur pour trouver le meilleur itinéraire pour votre colis.',
+          IconButton(
+            icon: Icon(
+              _isFilterPanelVisible ? Icons.filter_list_off : Icons.filter_list,
+              color: theme.colorScheme.onSurface,
+            ),
+            onPressed: () {
+              setState(() {
+                _isFilterPanelVisible = !_isFilterPanelVisible;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Le reste des widgets est inchangé ---
+
+  // Widget pour le panneau de filtres
+  Widget _buildFilterPanel() {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      color: theme.colorScheme.primary.withOpacity(0.05),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _departureController,
+                  decoration: const InputDecoration(hintText: 'Départ', prefixIcon: Icon(Icons.flight_takeoff)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _arrivalController,
+                  decoration: const InputDecoration(hintText: 'Arrivée', prefixIcon: Icon(Icons.flight_land)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(_selectedDate == null
+                      ? 'Choisir une date'
+                      : DateFormat('d MMM yyyy', 'fr_FR').format(_selectedDate!)),
+                  onPressed: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate ?? DateTime.now(),
+                      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (pickedDate != null) {
+                      setState(() {
+                        _selectedDate = pickedDate;
+                      });
+                    }
+                  },
+                ),
+              ),
+              if (_selectedDate != null)
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      _selectedDate = null;
+                    });
+                  },
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget pour l'état "aucun résultat de recherche"
+  Widget _buildNoResultsState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off, size: 80, color: Colors.grey.shade600),
+          const SizedBox(height: 16),
+          Text(
+            "Aucun résultat",
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white70),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Essayez d'ajuster vos filtres.",
+            style: Theme.of(context).textTheme.bodyLarge,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
+  // Widget pour l'état vide
   Widget _buildEmptyState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.search_off, size: 80, color: Colors.grey[400]),
-        const SizedBox(height: 16),
-        Text(
-          'Aucun trajet trouvé',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[600],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.map_outlined, size: 80, color: Colors.grey.shade600),
+          const SizedBox(height: 16),
+          Text(
+            "Aucun trajet disponible",
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white70),
           ),
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0),
-          child: Text(
-            'Essayez un autre lieu de départ ou d’arrivée.',
+          const SizedBox(height: 8),
+          Text(
+            "Revenez plus tard ou proposez le vôtre !",
+            style: Theme.of(context).textTheme.bodyLarge,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(color: Colors.grey[500]),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  // Widget pour l'état d'erreur
+  Widget _buildErrorState(TripProvider provider) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 80, color: Theme.of(context).colorScheme.error),
+          const SizedBox(height: 16),
+          Text(
+            "Oups, une erreur est survenue",
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            provider.error!,
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.refresh),
+            label: const Text("Réessayer"),
+            onPressed: () => provider.fetchAllTrips(),
+          ),
+        ],
+      ),
     );
   }
 }
