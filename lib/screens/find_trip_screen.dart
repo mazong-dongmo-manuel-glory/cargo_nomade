@@ -174,13 +174,16 @@ class _FindTripScreenState extends State<FindTripScreen> {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16.0),
-      color: theme.colorScheme.primary.withOpacity(0.05),
+      color: theme.colorScheme.primary,
       child: Column(
         children: [
           Row(
             children: [
               Expanded(
                 child: TextField(
+                  style: TextStyle(
+                      color: Colors.black
+                  ),
                   controller: _departureController,
                   decoration: const InputDecoration(hintText: 'Départ', prefixIcon: Icon(Icons.flight_takeoff)),
                 ),
@@ -188,8 +191,11 @@ class _FindTripScreenState extends State<FindTripScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
+                  style: TextStyle(
+                    color: Colors.black
+                  ),
                   controller: _arrivalController,
-                  decoration: const InputDecoration(hintText: 'Arrivée', prefixIcon: Icon(Icons.flight_land)),
+                  decoration: const InputDecoration(hintText: 'Arrivée', prefixIcon: Icon(Icons.flight_land), ),
                 ),
               ),
             ],
@@ -205,6 +211,22 @@ class _FindTripScreenState extends State<FindTripScreen> {
                       : DateFormat('d MMM yyyy', 'fr_FR').format(_selectedDate!)),
                   onPressed: () async {
                     final pickedDate = await showDatePicker(
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                              primary: Color(0xFF0D5159), // Couleur principale du picker
+                              onPrimary: Colors.white,
+                              onSurface: Colors.black, // Couleur du texte dans le calendrier
+                            ),
+                            textButtonTheme: TextButtonThemeData(
+                              style: TextButton.styleFrom(foregroundColor: Colors.black),
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+
                       context: context,
                       initialDate: _selectedDate ?? DateTime.now(),
                       firstDate: DateTime.now().subtract(const Duration(days: 30)),

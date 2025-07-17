@@ -1,6 +1,7 @@
 // FILE: lib/routes.dart
 
 import 'package:cargo_nomade/layout.dart';
+import 'package:cargo_nomade/providers/auth_provider.dart';
 import 'package:cargo_nomade/screens/find_trip_screen.dart';
 import 'package:cargo_nomade/providers/user_provider.dart';
 import 'package:cargo_nomade/screens/home_screen.dart';
@@ -22,11 +23,12 @@ GoRouter buildGoRouter(BuildContext context) {
     refreshListenable: userProvider,
 
     // On commence par /loading puisque UserProvider commence par isLoading = true
-    initialLocation: '/home',
+    initialLocation: '/',
 
     routes: [
       ShellRoute(
         builder: (context,state, child){
+
           if (state.matchedLocation == "/" || state.matchedLocation == "/register") {
             return child;
           }

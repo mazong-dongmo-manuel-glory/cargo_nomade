@@ -20,11 +20,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _buttonScaleAnimation;
+  final AuthProvider _authProvider  = AuthProvider();
 
   @override
   void initState() {
     super.initState();
-
+    if(_authProvider.isAuthenticated){
+      context.go('/home');
+    }
     _fadeController = AnimationController(
       duration: Duration(milliseconds: 1000),
       vsync: this,
